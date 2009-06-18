@@ -24,7 +24,7 @@ use TAEB::OO;
 
 has _intrinsic_tags => (
     is      => 'ro',
-    isa     => 'HashRef[HashRef[String]]',
+    isa     => 'HashRef[HashRef[Int]]',
     default => sub { {} },
 );
 
@@ -32,7 +32,7 @@ has _intrinsic_tags => (
 
 has _dungeon_tags => (
     is      => 'ro',
-    isa     => 'HashRef[HashRef[String]]',
+    isa     => 'HashRef[HashRef[Int]]',
     default => sub { {} },
 );
 
@@ -42,6 +42,19 @@ has _reiterate_solver => (
     isa  => 'Bool',
     is   => 'rw',
 );
+
+use constant {
+    DEFINITELY_NOT => -3,
+    PROBABLY_NOT   => -2,
+    LIKELY_NOT     => -1,
+    NEUTRAL        => 0,
+    LIKELY         => 1,
+    PROBABLY       => 2,
+    DEFINITELY     => 3,
+};
+
+################
+
 
 __PACKAGE__->meta->make_immutable;
 
