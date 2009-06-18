@@ -21,6 +21,7 @@ package TAEB::Component::LevelClassifier;
 use TAEB::OO;
 
 # The tags, as they are computed on a level-by-level basis.
+# Levels are only ever added to these hashes.
 
 has _intrinsic_tags => (
     is      => 'ro',
@@ -55,6 +56,96 @@ use constant {
 
 ################
 
+sub _rate {
+    my ($self, $level, $tag, $new) = @_;
+    my $ref = \ (($self->_dungeon_tags->{$level} ||= {})->{$tag} ||= 0);
+
+    return $$ref unless defined $new;
+
+    if (abs($new) < $$ref || ($new > 0 && $$ref == -$new)) {
+        die "Termination order for solver has been violated.  Attempting to rerate ($level,$tag) from $$ref to $new.";
+    }
+
+    if ($$ref != $new) {
+        $self->_reiterate_solver(1);
+    }
+
+    $$ref = $new;
+}
+
+sub _solver {
+    my ($self) = @_;
+
+    my @levels = keys %{ $self->_intrinsic_tags };
+
+    for my $level (@levels) {
+        $self->_dungeon_tags{$level} = { %{ $self->_intrinsic_tags->{$level} } };
+    }
+
+    $self->_reiterate_solver(1);
+
+    while($self->_reiterate_solver) {
+        $self->_reiterate_solver(0);
+
+        # A level cannot be Oracle and Minetown, or dungeons and mines
+        for my $level (@levels) {
+            $self->_constrain_disjunction($level, $self->branch_tags);
+            $self->_constrain_disjunction($level, $self->level_type_tags);
+        }
+
+        # Two levels cannot be the Oracle
+        for my $tag ($self->unique_tags) {
+            $self->_constrain_disjunction(\@levels, $tag);
+        }
+
+        # Topographical connection rules go here?
+    }
+}
+
+# One definitely makes everything else d.not, etc
+sub _constrain_disjunction {
+    my ($self, $lset, $tset) = @_;
+
+    $lset = [$lset] unless ref $lset;
+    $tset = [$tset] unless ref $tset;
+
+    my $candidate_rating = NEUTRAL;
+    my ($candidate_level, $candidate_tag, @ties);
+
+    for my $level (@$lset) {
+        for my $tag (@$tset) {
+
+            my $rating = $self->_rate($level, $tag);
+            next unless $rating > NEUTRAL;
+
+            if ($rating == $candidate_rating) {
+                push @ties, "$level,$tag";
+            } else {
+                $candidate_rating = $rating;
+                $candidate_level = $level;
+                $candidate_tag = $tag;
+                @ties = "$level,$tag";
+            }
+        }
+    }
+
+    if ($candidate_rating == DEFINITELY && @ties > 1) {
+        my $tielist = join ", ", map { "($_)" } @ties;
+
+        die "All of $tielist were rated at definitely.  This indicates a bug in the recognizers."
+    }
+
+    for my $level (@$lset) {
+        for my $tag (@$tset) {
+
+            next if $level eq $candidate_level && $tag eq $candidate_tag;
+
+            next if $self->_rate($level,$tag) < -$candidate_rating;
+
+            $self->_rate($level,$tag, -$candidate_rating);
+        }
+    }
+}
 
 __PACKAGE__->meta->make_immutable;
 
