@@ -20,6 +20,29 @@ package TAEB::Component::LevelClassifier;
 
 use TAEB::OO;
 
+# The tags, as they are computed on a level-by-level basis.
+
+has _intrinsic_tags => (
+    is      => 'ro',
+    isa     => 'HashRef[HashRef[String]]',
+    default => sub { {} },
+);
+
+# The tags, cooked by constraint.
+
+has _dungeon_tags => (
+    is      => 'ro',
+    isa     => 'HashRef[HashRef[String]]',
+    default => sub { {} },
+);
+
+# Set to 1 whenever the iteration changes something.
+
+has _reiterate_solver => (
+    isa  => 'Bool',
+    is   => 'rw',
+);
+
 __PACKAGE__->meta->make_immutable;
 
 1;
