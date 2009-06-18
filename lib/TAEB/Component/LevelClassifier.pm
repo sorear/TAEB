@@ -102,18 +102,14 @@ sub _solver {
     }
 }
 
-# One definitely makes everything else d.not, etc
-sub _constrain_disjunction {
-    my ($self, $lset, $tset) = @_;
-
-    $lset = [$lset] unless ref $lset;
-    $tset = [$tset] unless ref $tset;
+sub _get_candidate {
+    my ($self, $level_set, $tag_set) = @_;
 
     my $candidate_rating = NEUTRAL;
     my ($candidate_level, $candidate_tag, @ties);
 
-    for my $level (@$lset) {
-        for my $tag (@$tset) {
+    for my $level (@$level_set) {
+        for my $tag (@$tag_set) {
 
             my $rating = $self->_rate($level, $tag);
             next unless $rating > NEUTRAL;
@@ -135,6 +131,20 @@ sub _constrain_disjunction {
         die "All of $tielist were rated at definitely.  This indicates a bug in the recognizers."
     }
 
+    return ($candidate_rating, $candidate_level, $candidate_tag, @ties);
+}
+
+# One definitely makes everything else d.not, etc
+sub _constrain_disjunction {
+    my ($self, $lset, $tset) = @_;
+
+    $lset = [$lset] unless ref $lset;
+    $tset = [$tset] unless ref $tset;
+
+    my $candidate_rating = NEUTRAL;
+    my ($candidate_rating, $candidate_level, $candidate_tag, @ties) =
+        $self->_get_candidate($lset, $tset);
+
     for my $level (@$lset) {
         for my $tag (@$tset) {
 
@@ -145,6 +155,43 @@ sub _constrain_disjunction {
             $self->_rate($level,$tag, -$candidate_rating);
         }
     }
+}
+
+##########
+
+sub rate {
+    my $self = shift;
+    string_ratings->[$self->_rate(@_)];
+}
+
+#XXX these are inefficient
+sub candidate {
+    my ($self, $tag) = @_;
+
+    my ($rating, $name, $tag, @ties) = 
+        $self->_get_candidate([ keys %{ $self->_dungeon_tags } ], [ $tag ]);
+
+    return $self->stable2level($name);
+}
+
+sub classify {
+    my ($self, $level) = @_;
+
+    my ($rating, $name, $tag, @ties) = 
+        $self->_get_candidate([ $self->level2stable($level) ],
+            [ $self->level_type_tags ]);
+
+    return $tag;
+}
+
+sub branch {
+    my ($self, $level) = @_;
+
+    my ($rating, $name, $tag, @ties) = 
+        $self->_get_candidate([ $self->level2stable($level) ],
+            [ $self->branch_tags ]);
+
+    return $tag;
 }
 
 __PACKAGE__->meta->make_immutable;
