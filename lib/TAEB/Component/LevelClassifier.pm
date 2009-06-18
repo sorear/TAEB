@@ -54,6 +54,26 @@ use constant {
     DEFINITELY     => 3,
 };
 
+use constant special_tags => [qw/
+    minetown minesend
+    soko1 soko2 soko3 soko4
+    questhome questlocate questgoal
+    oracle bigroom rogue medusa castle
+    valley asmodeus juiblex baalzebub wizard1 wizard2 wizard3
+    orcus fakewiz1 fakewiz2 sanctum
+    ludios
+    vlad1 vlad2 vlad3
+    earth fire air water astral/],
+
+use constant unique_tags => [ @{ special_tags }, qw/
+    minefork sokofork questfork ludiosfork vladfork vibratingsquare/ ];
+
+use constant branch_tags => [qw/mines sokoban quest dungeon gehennom ludios
+        planes vlad/],
+
+use constant level_type_tags => [ @{ special_tags },
+    qw/minefill dgnfill mazefill questfill1 questfill2/ ];
+
 ################
 
 sub _rate {
