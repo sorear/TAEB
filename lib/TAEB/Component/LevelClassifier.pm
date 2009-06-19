@@ -68,8 +68,8 @@ use constant special_tags => [qw/
 use constant unique_tags => [ @{ special_tags }, qw/
     minefork sokofork questfork ludiosfork vladfork vibratingsquare/ ];
 
-use constant branch_tags => [qw/mines sokoban quest dungeon gehennom ludios
-        planes vlad/],
+#use constant branch_tags => [qw/mines sokoban quest dungeon gehennom ludios
+#        planes vlad/],
 
 use constant level_type_tags => [ @{ special_tags },
     qw/minefill dgnfill mazefill questfill1 questfill2/ ];
@@ -109,7 +109,7 @@ sub _solver {
 
         # A level cannot be Oracle and Minetown, or dungeons and mines
         for my $level (@levels) {
-            $self->_constrain_disjunction($level, $self->branch_tags);
+#            $self->_constrain_disjunction($level, $self->branch_tags);
             $self->_constrain_disjunction($level, $self->level_type_tags);
         }
 
@@ -204,15 +204,15 @@ sub classify {
     return $tag;
 }
 
-sub branch {
-    my ($self, $level) = @_;
-
-    my ($rating, $name, $tag, @ties) = 
-        $self->_get_candidate([ $self->level2stable($level) ],
-            [ $self->branch_tags ]);
-
-    return $tag;
-}
+#sub branch {
+#    my ($self, $level) = @_;
+#
+#    my ($rating, $name, $tag, @ties) = 
+#        $self->_get_candidate([ $self->level2stable($level) ],
+#            [ $self->branch_tags ]);
+#
+#    return $tag;
+#}
 
 __PACKAGE__->meta->make_immutable;
 
