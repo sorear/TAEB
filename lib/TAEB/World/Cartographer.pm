@@ -91,10 +91,12 @@ sub update {
     my $tile_changed = 0;
     my $rogue = $level->is_rogue;
 
+    $self->invalidate_fov;
+
     $level->iterate_tile_vt(sub {
         my ($tile, $glyph, $color, $x, $y) = @_;
 
-        $tile->_clear_monster if $tile->has_monster;
+        $tile->_clear_monster if $tile->has_monster && $tile->in_los;
         # To save time, don't look for monsters in blank space, except
         # on the Rogue level. Likewise, . and # do not represent monsters.
         $tile->try_monster($glyph, $color)
@@ -139,10 +141,6 @@ sub update {
         $self->autoexplore($level == $old_level);
         $self->dungeon->current_level->detect_branch;
         TAEB->send_message('tile_changes');
-    }
-
-    if ($tile_changed || $self->x != $old_x || $self->y != $old_y) {
-        $self->invalidate_fov;
     }
 }
 

@@ -43,6 +43,12 @@ has disposition => (
     isa => 'Maybe[TAEB::Type::Disposition]',
 );
 
+has last_seen => (
+    is      => 'rw',
+    isa     => 'Int',
+    default => sub { TAEB->turn },
+);
+
 sub maybe {
     my $self = shift;
     my $property = shift;
@@ -401,6 +407,11 @@ sub average_actions_to_kill {
     my $hd = (max map { $_->hitdice } $self->possibilities);
     return 2.5 / $potential if !$hd;
     return $hd * 4.5 / $potential;
+}
+
+sub currently_seen {
+    my $self = shift;
+    return $self->last_seen == TAEB->turn;
 }
 
 __PACKAGE__->meta->make_immutable;
