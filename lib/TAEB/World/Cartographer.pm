@@ -91,17 +91,13 @@ sub update {
     my $tile_changed = 0;
     my $rogue = $level->is_rogue;
 
-    $self->invalidate_fov;
-
+    my @old_monsters;
     $level->iterate_tile_vt(sub {
         my ($tile, $glyph, $color, $x, $y) = @_;
 
         if ($tile->has_monster) {
-            my $monster = $tile->monster;
-            if ($tile->in_los
-             || TAEB->turn - $monster->last_seen > $monster->persistence_time) {
-                $tile->_clear_monster;
-            }
+            push @old_monsters, $tile->monster;
+            $tile->_clear_monster;
         }
         # To save time, don't look for monsters in blank space, except
         # on the Rogue level. Likewise, . and # do not represent monsters.
@@ -147,6 +143,22 @@ sub update {
         $self->autoexplore($level == $old_level);
         $self->dungeon->current_level->detect_branch;
         TAEB->send_message('tile_changes');
+    }
+
+    if ($tile_changed || $self->x != $old_x || $self->y != $old_y) {
+        $self->invalidate_fov;
+    }
+
+    for my $monster (@old_monsters) {
+        my $tile = $monster->tile;
+        # if we saw another monster here, the old monster is gone
+        next if $tile->has_monster;
+        # if the tile is in los, we'd be able to see a monster there
+        # XXX: cold-blooded monsters in darkness?
+        next if $tile->in_los;
+        # if the monster has been remembered for a while, forget it
+        next if TAEB->turn - $monster->last_seen > $monster->persistence_time;
+        $tile->monster($monster);
     }
 }
 
