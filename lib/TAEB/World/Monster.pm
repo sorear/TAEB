@@ -377,7 +377,7 @@ sub can_be_infraseen {
 }
 
 sub speed {
-    max map { $_->{speed} } shift->spoiler;
+    return max map { $_->{speed} } shift->possibilities;
 }
 
 sub maximum_melee_damage {
