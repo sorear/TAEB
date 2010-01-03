@@ -149,6 +149,15 @@ sub update {
         $self->invalidate_fov;
     }
 
+    # update the last seen time for monsters in fov
+    my $turn = TAEB->turn;
+    for my $monster ($level->monsters) {
+        # these will only be the monsters we can currently see, since we
+        # haven't replaced the remembered monsters yet
+        $monster->last_seen($turn);
+    }
+
+    # replace previously known monsters if they moved out of view
     for my $monster (@old_monsters) {
         my $tile = $monster->tile;
         # if we saw another monster here, the old monster is gone
