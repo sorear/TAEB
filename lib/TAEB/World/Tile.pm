@@ -617,12 +617,17 @@ sub try_monster {
     );
 
     $self->monster($monster);
-    $level->add_monster($monster);
 }
 
 before _clear_monster => sub {
     my $self = shift;
     $self->level->remove_monster($self->monster);
+};
+
+after monster => sub {
+    my $self = shift;
+    return unless @_;
+    $self->level->add_monster($_[0]);
 };
 
 sub has_enemy {

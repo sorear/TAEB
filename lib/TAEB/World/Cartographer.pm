@@ -168,7 +168,6 @@ sub update {
         # if the monster has been remembered for a while, forget it
         next if TAEB->turn - $monster->last_seen > $monster->persistence_time;
         $tile->monster($monster);
-        $level->add_monster($monster);
     }
 }
 
