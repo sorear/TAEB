@@ -414,6 +414,12 @@ sub currently_seen {
     return $self->last_seen == TAEB->turn;
 }
 
+sub persistence_time {
+    my $self = shift;
+    # XXX: this should eventually be configurable by the ai or something
+    return $self->can_move ? (120 / $self->speed) : 1e7;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

@@ -96,7 +96,13 @@ sub update {
     $level->iterate_tile_vt(sub {
         my ($tile, $glyph, $color, $x, $y) = @_;
 
-        $tile->_clear_monster if $tile->has_monster && $tile->in_los;
+        if ($tile->has_monster) {
+            my $monster = $tile->monster;
+            if ($tile->in_los
+             || TAEB->turn - $monster->last_seen > $monster->persistence_time) {
+                $tile->_clear_monster;
+            }
+        }
         # To save time, don't look for monsters in blank space, except
         # on the Rogue level. Likewise, . and # do not represent monsters.
         $tile->try_monster($glyph, $color)
