@@ -152,6 +152,15 @@ sub update {
     # replace previously known monsters if they moved out of view
     for my $monster (@old_monsters) {
         my $tile = $monster->tile;
+        # we cleared all monsters at the beginning of this update, so we need
+        # to check for monsters that didn't move (since iterate_tiles_vt won't
+        # see them)
+        # XXX: can we factor these tests out?
+        my ($glyph, $color, $x, $y) = ($tile->glyph, $tile->color, $tile->x, $tile->y);
+        $tile->try_monster($glyph, $color)
+            unless ($glyph eq ' ' && !$rogue)
+                or ($glyph eq '.' || $glyph eq '#')
+                or ($Tx == $x && $Ty == $y);
         # if we saw another monster here, the old monster is gone
         next if $tile->has_monster;
         # if the tile is in los, we'd be able to see a monster there
