@@ -278,8 +278,9 @@ sub _astar {
     my $from = $args{from} || TAEB->current_tile;
     my $through_unknown   = $args{through_unknown} || 0;
     my $key = join ":", (refaddr($to), refaddr($from), $through_unknown);
-    my $cache = $to->level->_astar_cache;
-    return $cache->{$key} if exists $cache->{$key};
+    my $level = $to->level;
+    return $level->_get_cached_astar_path($key)
+        if $level->_has_cached_astar_path($key);
 
     my $sokoban           = $from->known_branch
                          && $from->branch eq 'sokoban';
@@ -295,7 +296,7 @@ sub _astar {
         my ($tile, $path) = @{ $pq->extract_top };
 
         if ($tile == $to) {
-            $cache->{$key} = $path;
+            $level->_cache_astar_path($key, $path);
             return $path;
         }
 
@@ -346,7 +347,7 @@ sub _astar {
         }
     }
 
-    $cache->{$key} = undef;
+    $level->_cache_astar_path($key, undef);
     return;
 }
 

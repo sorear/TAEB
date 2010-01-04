@@ -132,11 +132,16 @@ has has_quest_portal => (
 );
 
 has _astar_cache => (
-    is      => 'ro',
-    isa     => 'HashRef[Str]',
+    traits  => ['Hash'],
+    isa     => 'HashRef[Maybe[Str]]',
     lazy    => 1,
     clearer => 'clear_astar_cache',
     default => sub { {} },
+    handles => {
+        _has_cached_astar_path => 'exists',
+        _cache_astar_path      => 'set',
+        _get_cached_astar_path => 'get',
+    },
 );
 
 
