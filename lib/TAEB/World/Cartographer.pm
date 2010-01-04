@@ -91,14 +91,14 @@ sub update {
     my $tile_changed = 0;
     my $rogue = $level->is_rogue;
 
-    my @old_monsters;
+    my @old_monsters = $level->monsters;
+    $_->tile->_clear_monster for @old_monsters;
+    assert($level->monster_count == 0,
+           "we removed all monsters from the level");
+
     $level->iterate_tile_vt(sub {
         my ($tile, $glyph, $color, $x, $y) = @_;
 
-        if ($tile->has_monster) {
-            push @old_monsters, $tile->monster;
-            $tile->_clear_monster;
-        }
         # To save time, don't look for monsters in blank space, except
         # on the Rogue level. Likewise, . and # do not represent monsters.
         $tile->try_monster($glyph, $color)
@@ -147,14 +147,6 @@ sub update {
 
     if ($tile_changed || $self->x != $old_x || $self->y != $old_y) {
         $self->invalidate_fov;
-    }
-
-    # update the last seen time for monsters in fov
-    my $turn = TAEB->turn;
-    for my $monster ($level->monsters) {
-        # these will only be the monsters we can currently see, since we
-        # haven't replaced the remembered monsters yet
-        $monster->last_seen($turn);
     }
 
     # replace previously known monsters if they moved out of view
