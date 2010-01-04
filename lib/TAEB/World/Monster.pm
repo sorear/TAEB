@@ -419,7 +419,7 @@ sub currently_seen {
 sub persistence_time {
     my $self = shift;
     # XXX: this should eventually be configurable by the ai or something
-    return $self->can_move ? (120 / $self->speed) : 1e7;
+    return ($self->can_move && $self->speed > 0) ? (120 / $self->speed) : 1e7;
 }
 
 __PACKAGE__->meta->make_immutable;
