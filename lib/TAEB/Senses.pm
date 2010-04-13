@@ -85,7 +85,8 @@ has turn => (
 
 has step => (
     is        => 'rw',
-    metaclass => 'Counter',
+    traits    => ['Counter'],
+    handles   => { inc_step => 'inc' },
 );
 
 has max_god_anger => (
