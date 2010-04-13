@@ -91,10 +91,14 @@ sub update {
     my $tile_changed = 0;
     my $rogue = $level->is_rogue;
 
+    my @old_monsters = $level->monsters;
+    $_->tile->_clear_monster for @old_monsters;
+    assert($level->monster_count == 0,
+           "we removed all monsters from the level");
+
     $level->iterate_tile_vt(sub {
         my ($tile, $glyph, $color, $x, $y) = @_;
 
-        $tile->_clear_monster if $tile->has_monster;
         # To save time, don't look for monsters in blank space, except
         # on the Rogue level. Likewise, . and # do not represent monsters.
         $tile->try_monster($glyph, $color)
@@ -143,6 +147,30 @@ sub update {
 
     if ($tile_changed || $self->x != $old_x || $self->y != $old_y) {
         $self->invalidate_fov;
+    }
+
+    # replace previously known monsters if they moved out of view
+    for my $monster (@old_monsters) {
+        my $tile = $monster->tile;
+        # if it was updated before, don't try to update it again
+        next if $tile->has_monster;
+        # we cleared all monsters at the beginning of this update, so we need
+        # to check for monsters that didn't move (since iterate_tiles_vt won't
+        # see them)
+        # XXX: can we factor these tests out?
+        my ($glyph, $color, $x, $y) = ($tile->glyph, $tile->color, $tile->x, $tile->y);
+        $tile->try_monster($glyph, $color)
+            unless ($glyph eq ' ' && !$rogue)
+                or ($glyph eq '.' || $glyph eq '#')
+                or ($Tx == $x && $Ty == $y);
+        # if we saw another monster here, the old monster is gone
+        next if $tile->has_monster;
+        # if the tile is in los, we'd be able to see a monster there
+        # XXX: cold-blooded monsters in darkness?
+        next if $tile->in_los;
+        # if the monster has been remembered for a while, forget it
+        next if TAEB->turn - $monster->last_seen > $monster->persistence_time;
+        $tile->monster($monster);
     }
 }
 

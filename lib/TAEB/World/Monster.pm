@@ -43,6 +43,12 @@ has disposition => (
     isa => 'Maybe[TAEB::Type::Disposition]',
 );
 
+has last_seen => (
+    is      => 'rw',
+    isa     => 'Int',
+    default => sub { TAEB->turn },
+);
+
 sub maybe {
     my $self = shift;
     my $property = shift;
@@ -371,7 +377,7 @@ sub can_be_infraseen {
 }
 
 sub speed {
-    max map { $_->{speed} } shift->spoiler;
+    return max map { $_->{speed} } shift->possibilities;
 }
 
 sub maximum_melee_damage {
@@ -401,6 +407,19 @@ sub average_actions_to_kill {
     my $hd = (max map { $_->hitdice } $self->possibilities);
     return 2.5 / $potential if !$hd;
     return $hd * 4.5 / $potential;
+}
+
+sub currently_seen {
+    my $self = shift;
+    # XXX: we update senses after the dungeon, so there's off by one here...
+    # leaving this here until that's looked into
+    return $self->last_seen == TAEB->turn - 1;
+}
+
+sub persistence_time {
+    my $self = shift;
+    # XXX: this should eventually be configurable by the ai or something
+    return ($self->can_move && $self->speed > 0) ? (120 / $self->speed) : 1e7;
 }
 
 __PACKAGE__->meta->make_immutable;

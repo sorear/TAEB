@@ -1,6 +1,6 @@
 package TAEB::World::Level;
 use TAEB::OO;
-use TAEB::Util qw/deltas delta2vi vi2delta tile_types first any/;
+use TAEB::Util qw/deltas delta2vi vi2delta tile_types first any assert/;
 
 with 'TAEB::Role::Reblessing';
 
@@ -72,6 +72,13 @@ has monsters => (
     }
 );
 
+before add_monster => sub {
+    my $self = shift;
+    my ($monster) = @_;
+    assert((!any { $_->tile == $monster->tile } $self->monsters),
+           "not adding two monsters to the same tile");
+};
+
 has turns_spent_on => (
     traits  => ['Counter'],
     is      => 'ro',
@@ -136,11 +143,16 @@ has has_quest_portal => (
 );
 
 has _astar_cache => (
-    is      => 'ro',
-    isa     => 'HashRef[Str]',
+    traits  => ['Hash'],
+    isa     => 'HashRef[Maybe[Str]]',
     lazy    => 1,
     clearer => 'clear_astar_cache',
     default => sub { {} },
+    handles => {
+        _has_cached_astar_path => 'exists',
+        _cache_astar_path      => 'set',
+        _get_cached_astar_path => 'get',
+    },
 );
 
 
